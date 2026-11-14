@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "pg-monitor",
+    "name": "PG Monitor",
     "slug": "pg-monitor",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/pg-monitor-icon.png",
     "scheme": "pgmonitor",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/pg-monitor-icon.png"
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ],
+      "package": "com.veetech.pgmonitor",
+      "icon": "./assets/images/pg-monitor-icon.png"
     },
     "web": {
       "output": "server",
@@ -25,17 +25,25 @@
     },
     "plugins": [
       "expo-router",
+      "expo-secure-store",
       [
-        "expo-splash-screen",
+        "expo-notifications",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "icon": "./assets/images/pg-monitor-notification-icon.png",
+          "color": "#0A9B70",
+          "defaultChannel": "monitoring-alerts"
+        }
+      ],
+      "expo-sharing",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow PG Monitor to use Face ID to protect your app."
         }
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
+      "typedRoutes": false,
       "reactCompiler": true
     }
   }

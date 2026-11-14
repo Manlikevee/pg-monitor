@@ -1,56 +1,36 @@
-# Welcome to your Expo app 👋
+# PG Monitor
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+PG Monitor is an Expo React Native app for managing PostgreSQL connection settings and viewing real monitoring results returned by a backend. It is written in JavaScript and JSX and uses Expo Router.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run the app
 
 ```bash
-npm run reset-project
+npx expo start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Use a development build for native notification and Face ID testing. Expo Go supports local notifications and fingerprint/passcode prompts; Face ID requires a development build.
 
-### Other setup steps
+## Local data and credentials
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- Profiles, database metadata, schedules, preferences, and monitoring history are stored with AsyncStorage.
+- Local account passwords are derived with PBKDF2-HMAC-SHA256 and a random per-account salt. The verifier is stored in SecureStore.
+- PostgreSQL passwords and the optional backend token are stored in SecureStore. They are excluded from JSON exports.
+- Local accounts are device-specific. They do not sync to a cloud identity service.
+- Importing a database configuration intentionally resets its status and disables its schedule; enter its password again before running a manual check.
 
-## Learn more
+## Monitoring backend contract
 
-To learn more about developing your project with Expo, look at the following resources:
+The app never opens a PostgreSQL socket. `src/services/api.js` is the backend boundary and sends database credentials only over HTTPS (plain HTTP is permitted for loopback development hosts). Optionally configure a checker endpoint URL and bearer token in Monitoring settings. The app accepts either a checker base URL (which uses `/api/monitor/check/`) or the direct check endpoint URL, such as `https://example.com/monitor/check/`. The checker can run on a computer or server you control on your private network; it does not need to be a cloud service.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+The direct check endpoint needs only this route:
 
-## Join the community
+- `POST /api/monitor/check/` — perform a real check and return `{ "success": true, "latency_ms": 32, "checked_at": "..." }`, or `{ "success": false, "error_code": "...", "checked_at": "..." }`.
+This check-only endpoint supports manual checks. It does not sync database configurations, run schedules, or register push tokens. A backend scheduler and push integration require their own compatible routes. The backend must protect credentials at rest, validate authorization where possible, use bounded timeouts, and redact secrets from logs. The mobile app cannot open raw PostgreSQL sockets and includes no Django/Celery checker server; a saved local schedule alone does not run while the app is closed.
 
-Join our community of developers creating universal apps.
+## Project structure
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `src/app/` — Expo Router routes and tabs.
+- `src/state/AppContext.jsx` — app state, local authentication, persistence, and secure credential access.
+- `src/services/api.js` — monitoring checker request and response handling.
+- `src/services/notifications.js` — local alert generation for real check outcomes.
+- `src/components/ui.jsx` — shared theme-aware controls.
